@@ -24,7 +24,7 @@ The data for this project is sourced from the Kaggle dataset:
 DROP TABLE IF EXISTS netflix;
 CREATE TABLE netflix
 (
-    show_id      VARCHAR(5),
+    show_id      VARCHAR(10),
     type         VARCHAR(10),
     title        VARCHAR(250),
     director     VARCHAR(550),
@@ -174,19 +174,16 @@ GROUP BY 1;
 return top 5 year with highest avg content release!
 
 ```sql
-SELECT 
-    country,
-    release_year,
-    COUNT(show_id) AS total_release,
-    ROUND(
-        COUNT(show_id)::numeric /
-        (SELECT COUNT(show_id) FROM netflix WHERE country = 'India')::numeric * 100, 2
-    ) AS avg_release
+SELECT
+   EXTRACT(YEAR FROM TO_DATE(REGEXP_REPLACE(date_added, '^[A-Za-z]+, ', ''), 'Month DD, YYYY')) as year,
+   COUNT(*) as yearly_content,
+   ROUND(
+   COUNT(*)::numeric/(SELECT COUNT(*)FROM netflix WHERE country = 'India')::numeric * 100
+    ,2)as avg_content_per_year
 FROM netflix
 WHERE country = 'India'
-GROUP BY country, release_year
-ORDER BY avg_release DESC
-LIMIT 5;
+  AND REGEXP_REPLACE(date_added, '^[A-Za-z]+, ', '') ~ '^[A-Za-z]+ [0-9]{1,2}, [0-9]{4}$'
+GROUP BY 1;
 ```
 
 **Objective:** Calculate and rank years by the average number of content releases by India.
@@ -225,14 +222,14 @@ WHERE casts LIKE '%Salman Khan%'
 ### 14. Find the Top 10 Actors Who Have Appeared in the Highest Number of Movies Produced in India
 
 ```sql
-SELECT 
-    UNNEST(STRING_TO_ARRAY(casts, ',')) AS actor,
-    COUNT(*)
+SELECT
+UNNEST(STRING_TO_ARRAY(casts, ',')) as actors,
+COUNT(*) as total_content
 FROM netflix
-WHERE country = 'India'
-GROUP BY actor
-ORDER BY COUNT(*) DESC
-LIMIT 10;
+WHERE country ILIKE '%india'
+GROUP BY 1
+order by 2 desc
+limit 10 
 ```
 
 **Objective:** Identify the top 10 actors with the most appearances in Indian-produced movies.
@@ -240,18 +237,23 @@ LIMIT 10;
 ### 15. Categorize Content Based on the Presence of 'Kill' and 'Violence' Keywords
 
 ```sql
-SELECT 
-    category,
-    COUNT(*) AS content_count
-FROM (
-    SELECT 
-        CASE 
-            WHEN description ILIKE '%kill%' OR description ILIKE '%violence%' THEN 'Bad'
-            ELSE 'Good'
-        END AS category
-    FROM netflix
-) AS categorized_content
-GROUP BY category;
+WITH new_table
+AS
+(
+SELECT
+*,
+ CASE
+ WHEN description ILIKE '%kills%' OR
+      description ILIKE '%violence%' THEN 'action_content'
+	  ELSE 'other_genre'
+END category	  
+ FROM netflix
+)
+SELECT
+ category,
+ COUNT(*) as total_content
+FROM new_table
+GROUP BY 1
 ```
 
 **Objective:** Categorize content as 'Bad' if it contains 'kill' or 'violence' and 'Good' otherwise. Count the number of items in each category.
@@ -267,17 +269,6 @@ This analysis provides a comprehensive view of Netflix's content and can help in
 
 
 
-## Author - Zero Analyst
-
+## Author - AyushtheAnalyst
 This project is part of my portfolio, showcasing the SQL skills essential for data analyst roles. If you have any questions, feedback, or would like to collaborate, feel free to get in touch!
 
-### Stay Updated and Join the Community
-
-For more content on SQL, data analysis, and other data-related topics, make sure to follow me on social media and join our community:
-
-- **YouTube**: [Subscribe to my channel for tutorials and insights](https://www.youtube.com/@zero_analyst)
-- **Instagram**: [Follow me for daily tips and updates](https://www.instagram.com/zero_analyst/)
-- **LinkedIn**: [Connect with me professionally](https://www.linkedin.com/in/najirr)
-- **Discord**: [Join our community to learn and grow together](https://discord.gg/36h5f2Z5PK)
-
-Thank you for your support, and I look forward to connecting with you!
