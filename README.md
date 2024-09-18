@@ -256,7 +256,7 @@ FROM new_table
 GROUP BY 1
 ```
 
-**Objective:** Categorize content as 'Bad' if it contains 'kill' or 'violence' and 'Good' otherwise. Count the number of items in each category.
+**Objective:** Categorize content as 'Action' if it contains 'Other Genre' or 'violence' and 'Good' otherwise. Count the number of items in each category.
 
 ## Findings and Conclusion
 
